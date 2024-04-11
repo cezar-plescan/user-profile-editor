@@ -1,0 +1,9 @@
+{
+  "extends": ["../tsconfig.json"],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "../dist/backend",
+    "rootDir": "./"
+  }
+}

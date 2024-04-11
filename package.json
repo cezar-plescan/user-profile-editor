@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "backend:ts": "tsc -p backend/tsconfig.json",
+    "backend:server": "node dist/backend/server.js",
+    "backend:run": "npm run backend:ts && npm run backend:server",
+    "backend:run:watch": "nodemon --watch backend --ext ts --exec \"npm run backend:run\""
   },
   "private": true,
   "dependencies": {
@@ -28,6 +32,11 @@
     "@angular-devkit/build-angular": "^17.3.3",
     "@angular/cli": "^17.3.3",
     "@angular/compiler-cli": "^17.3.3",
-    "typescript": "~5.4.4"
+    "typescript": "~5.4.4",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "nodemon": "^3.1.0",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.12.7"
   }
 }

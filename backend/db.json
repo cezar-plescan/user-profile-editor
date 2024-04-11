@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "name": "Smith",
+      "email": "office@smith.com",
+      "address": "Broadway",
+      "id": "1"
+    }
+  ]
+}
