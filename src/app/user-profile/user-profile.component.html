@@ -1,1 +1,37 @@
-<p>user-profile works!</p>
+<div class="user-profile">
+  <form [formGroup]="form">
+
+    <div class="form-fields-wrapper">
+
+      <div class="input-fields-container">
+        <mat-form-field>
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" type="text" />
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="text" />
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Address</mat-label>
+          <input matInput formControlName="address" type="text" />
+        </mat-form-field>
+      </div>
+
+      <div class="avatar-container">
+        <img src="/assets/avatar-placeholder.jpg" alt="avatar"/>
+      </div>
+
+    </div>
+
+    <div class="buttons-container">
+      <button mat-raised-button
+              type="submit"
+              color="primary"
+      >Save</button>
+
+    </div>
+  </form>
+</div>
