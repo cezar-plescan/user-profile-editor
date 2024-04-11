@@ -1,9 +1,27 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from "@angular/common";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
+import { HttpClient } from "@angular/common/http";
+import { map } from "rxjs";
+import { pick } from "lodash-es";
+
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  address: string;
+  avatar: string;
+}
+
+type UserProfileForm = Pick<UserProfile, "name" | "email" | "address" | "avatar">
+
+interface UserDataResponse {
+  status: 'ok';
+  data: UserProfile;
+}
 
 @Component({
   selector: 'app-user-profile',
@@ -12,11 +30,33 @@ import { MatButtonModule } from "@angular/material/button";
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.css'
 })
-export class UserProfileComponent {
+export class UserProfileComponent implements OnInit {
+  private httpClient = inject(HttpClient);
+
   protected form = inject(FormBuilder).group({
-    name: new FormControl('Smith', [Validators.required]),
-    email: new FormControl('office@smith.com', [Validators.required, Validators.email]),
-    address: new FormControl('Broadway', [Validators.required]),
+    name: new FormControl('', [Validators.required]),
+    email: new FormControl('', [Validators.required, Validators.email]),
+    address: new FormControl('', [Validators.required]),
     avatar: new FormControl('')
   });
+
+  ngOnInit() {
+    this.loadUserData();
+  }
+
+  private loadUserData() {
+    this.getUserData$().subscribe(userData => {
+      this.updateForm(userData);
+    })
+  }
+
+  private getUserData$() {
+    return this.httpClient.get<UserDataResponse>(`http://localhost:3000/users/1`).pipe(
+      map(response => response.data)
+    );
+  }
+
+  private updateForm(userData: UserProfile) {
+    this.form.setValue(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
+  }
 }

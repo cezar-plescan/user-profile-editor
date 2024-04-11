@@ -1,10 +1,11 @@
 {
   "users": [
     {
+      "id": "1",
       "name": "Smith",
       "email": "office@smith.com",
       "address": "Broadway",
-      "id": "1"
+      "avatar": ""
     }
   ]
 }
