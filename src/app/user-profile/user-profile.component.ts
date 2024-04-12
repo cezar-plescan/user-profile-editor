@@ -82,4 +82,12 @@ export class UserProfileComponent implements OnInit {
   private updateForm(userData: UserProfile) {
     this.form.setValue(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
   }
+
+  protected saveUserData() {
+    this.saveUseData$().subscribe()
+  }
+
+  private saveUseData$() {
+    return this.httpClient.put<UserDataResponse>(`http://localhost:3000/users/1`, this.form.value)
+  }
 }

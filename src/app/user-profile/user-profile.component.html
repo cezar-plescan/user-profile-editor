@@ -9,7 +9,7 @@
     >Retry</button>
   }
   @else {
-    <form [formGroup]="form">
+    <form [formGroup]="form" (ngSubmit)="saveUserData()">
 
       <div class="form-fields-wrapper">
 
