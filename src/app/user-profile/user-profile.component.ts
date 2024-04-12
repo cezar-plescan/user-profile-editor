@@ -40,12 +40,21 @@ export class UserProfileComponent implements OnInit {
     avatar: new FormControl('')
   });
 
+  protected isLoadRequestInProgress = false;
+
   ngOnInit() {
     this.loadUserData();
   }
 
   private loadUserData() {
+    // set the loading flag when the request is initiated
+    this.isLoadRequestInProgress = true;
+
     this.getUserData$().subscribe(userData => {
+      // clear the loading flag when the request completes
+      this.isLoadRequestInProgress = false;
+
+      // display the user data in the form
       this.updateForm(userData);
     })
   }
