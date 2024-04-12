@@ -4,8 +4,8 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
-import { HttpClient } from "@angular/common/http";
-import { map } from "rxjs";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { catchError, EMPTY, finalize, map } from "rxjs";
 import { pick } from "lodash-es";
 
 interface UserProfile {
@@ -41,22 +41,36 @@ export class UserProfileComponent implements OnInit {
   });
 
   protected isLoadRequestInProgress = false;
+  protected hasLoadingError = false;
 
   ngOnInit() {
     this.loadUserData();
   }
 
-  private loadUserData() {
+  protected loadUserData() {
     // set the loading flag when the request is initiated
     this.isLoadRequestInProgress = true;
 
-    this.getUserData$().subscribe(userData => {
-      // clear the loading flag when the request completes
-      this.isLoadRequestInProgress = false;
+    this.getUserData$()
+      .pipe(
+        finalize(() => {
+          // clear the loading flag when the request completes
+          this.isLoadRequestInProgress = false;
+        }),
+        catchError((error: HttpErrorResponse) => {
+          // set the loading error flag
+          this.hasLoadingError = true;
 
-      // display the user data in the form
-      this.updateForm(userData);
-    })
+          return EMPTY;
+        })
+      )
+      .subscribe(userData => {
+        // clear the loading error flag
+        this.hasLoadingError = false;
+
+        // display the user data in the form
+        this.updateForm(userData);
+      })
   }
 
   private getUserData$() {

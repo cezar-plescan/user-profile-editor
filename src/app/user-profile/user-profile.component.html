@@ -2,6 +2,12 @@
   @if (isLoadRequestInProgress) {
     Waiting for user data...
   }
+  @else if (hasLoadingError) {
+    Error while reading data!
+    <button mat-stroked-button
+            (click)="loadUserData()"
+    >Retry</button>
+  }
   @else {
     <form [formGroup]="form">
 
