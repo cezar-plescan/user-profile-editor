@@ -112,17 +112,11 @@ export class UserProfileComponent implements OnInit {
     // set the saving flag
     this.isSaveRequestInProgress = true;
 
-    // disable form controls
-    this.disableForm();
-
     this.saveUseData$()
       .pipe(
         finalize(() => {
           // clear the saving flag
           this.isSaveRequestInProgress = false;
-
-          // enable form controls
-          this.enableForm();
         }),
         catchError(error => {
           // handle server-side validation errors
@@ -178,15 +172,4 @@ export class UserProfileComponent implements OnInit {
       )
   }
 
-  private disableForm() {
-    Object.values(this.form.controls).forEach(control => {
-      control.disable()
-    })
-  }
-
-  private enableForm() {
-    Object.values(this.form.controls).forEach(control => {
-      control.enable()
-    })
-  }
 }
