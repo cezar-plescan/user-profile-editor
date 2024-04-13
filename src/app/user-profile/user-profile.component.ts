@@ -7,6 +7,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { HttpClient, HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
 import { isEqual, pick } from "lodash-es";
+import { NotificationService } from "../services/notification.service";
 
 interface UserProfile {
   id: number;
@@ -41,6 +42,7 @@ export interface ValidationErrorResponse {
 })
 export class UserProfileComponent implements OnInit {
   private httpClient = inject(HttpClient);
+  private notification = inject(NotificationService);
 
   protected form = inject(FormBuilder).group({
     name: new FormControl('', [Validators.required]),
@@ -137,6 +139,9 @@ export class UserProfileComponent implements OnInit {
       .subscribe((response) => {
         // store the user data
         this.userData = response.data
+
+        // display a success notification
+        this.notification.display('The profile was successfully saved');
       })
   }
 
