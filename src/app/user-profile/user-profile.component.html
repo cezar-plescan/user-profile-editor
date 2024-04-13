@@ -17,16 +17,31 @@
           <mat-form-field>
             <mat-label>Name</mat-label>
             <input matInput formControlName="name" type="text" />
+            <mat-error>
+              @if (form.get('name')?.hasError('required')) {
+                The name in required
+              } @else if (form.get('name')?.hasError('duplicate_name')) {
+                {{form.get('name')?.getError('duplicate_name')}}
+              }
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field>
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" type="text" />
+            <mat-error>
+              @if (form.get('email')?.hasError('required')) {
+                The email in required
+              } @else if (form.get('email')?.hasError('email')) {
+                Invalid email format
+              }
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field>
             <mat-label>Address</mat-label>
             <input matInput formControlName="address" type="text" />
+            <mat-error>The address is required</mat-error>
           </mat-form-field>
         </div>
 
@@ -40,6 +55,7 @@
         <button mat-raised-button
                 type="submit"
                 color="primary"
+                [disabled]="isSaveButtonDisabled"
         >Save</button>
 
       </div>

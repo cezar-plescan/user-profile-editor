@@ -88,6 +88,22 @@ app.put('/users/:id', (req, res) => {
     return;
   }
 
+  // the names should be unique
+  if (users.some(user => String(user.id) != userId && user.name === updatedUserData.name)) {
+    res.status(400).send({
+      message: 'Validation errors',
+      errors: [
+        {
+          field: 'name',
+          message: 'There is already a user with this name.',
+          code: 'duplicate_name'
+        }
+      ]
+    });
+
+    return;
+  }
+
   let updatedUser: User = {} as User;
 
   users = users.map(user => {

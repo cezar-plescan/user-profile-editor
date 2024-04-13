@@ -6,6 +6,13 @@
       "email": "office@smith.com",
       "address": "Broadway",
       "avatar": ""
+    },
+    {
+      "id": "2",
+      "name": "John",
+      "email": "office@john.com",
+      "address": "Hollywood",
+      "avatar": ""
     }
   ]
 }

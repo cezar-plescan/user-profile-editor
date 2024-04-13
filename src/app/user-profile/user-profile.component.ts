@@ -4,7 +4,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
 import { pick } from "lodash-es";
 
@@ -21,6 +21,15 @@ type UserProfileForm = Pick<UserProfile, "name" | "email" | "address" | "avatar"
 interface UserDataResponse {
   status: 'ok';
   data: UserProfile;
+}
+
+export interface ValidationErrorResponse {
+  message: string;
+  errors: {
+    field: string;
+    message: string;
+    code: string;
+  }[]
 }
 
 @Component({
@@ -42,6 +51,10 @@ export class UserProfileComponent implements OnInit {
 
   protected isLoadRequestInProgress = false;
   protected hasLoadingError = false;
+
+  protected get isSaveButtonDisabled() {
+    return !this.form.valid;
+  }
 
   ngOnInit() {
     this.loadUserData();
@@ -84,10 +97,37 @@ export class UserProfileComponent implements OnInit {
   }
 
   protected saveUserData() {
-    this.saveUseData$().subscribe()
+    this.saveUseData$()
+      .pipe(
+        catchError(error => {
+          // handle server-side validation errors
+          if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.BadRequest) {
+            this.setFormErrors(error.error)
+
+            return EMPTY;
+          }
+
+          // if there is another type of error, throw it again.
+          throw error;
+        })
+      )
+      .subscribe()
   }
 
   private saveUseData$() {
     return this.httpClient.put<UserDataResponse>(`http://localhost:3000/users/1`, this.form.value)
+  }
+
+  private setFormErrors(errorResponse: ValidationErrorResponse | null | undefined) {
+    if (!errorResponse || !errorResponse.errors) {
+      this.form.setErrors(null);
+      return;
+    }
+
+    errorResponse.errors.forEach(error => {
+      this.form.get(error.field)?.setErrors({
+        [error.code]: error.message
+      })
+    })
   }
 }
