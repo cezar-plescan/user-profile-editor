@@ -6,7 +6,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { HttpClient, HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
-import { pick } from "lodash-es";
+import { isEqual, pick } from "lodash-es";
 
 interface UserProfile {
   id: number;
@@ -53,8 +53,14 @@ export class UserProfileComponent implements OnInit {
   protected hasLoadingError = false;
 
   protected get isSaveButtonDisabled() {
-    return !this.form.valid;
+    return !this.form.valid || this.isFormPristine;
   }
+
+  protected get isResetButtonDisabled() {
+    return this.isFormPristine;
+  }
+
+  private userData: UserProfile | null = null;
 
   ngOnInit() {
     this.loadUserData();
@@ -81,6 +87,9 @@ export class UserProfileComponent implements OnInit {
         // clear the loading error flag
         this.hasLoadingError = false;
 
+        // store the user data
+        this.userData = userData
+
         // display the user data in the form
         this.updateForm(userData);
       })
@@ -93,7 +102,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   private updateForm(userData: UserProfile) {
-    this.form.setValue(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
+    this.form.reset(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
   }
 
   protected saveUserData() {
@@ -111,7 +120,10 @@ export class UserProfileComponent implements OnInit {
           throw error;
         })
       )
-      .subscribe()
+      .subscribe((response) => {
+        // store the user data
+        this.userData = response.data
+      })
   }
 
   private saveUseData$() {
@@ -130,4 +142,21 @@ export class UserProfileComponent implements OnInit {
       })
     })
   }
+
+  protected restoreForm() {
+    this.userData && this.updateForm(this.userData);
+  }
+
+  /**
+   * Checks if the form value reflects the last value received from the backend
+   */
+  private get isFormPristine(): boolean {
+    return Boolean(this.userData)
+      && Boolean(this.form.value)
+      && isEqual(
+        this.form.value,
+        pick(this.userData, Object.keys(this.form.value))
+      )
+  }
+
 }

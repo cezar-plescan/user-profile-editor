@@ -57,7 +57,11 @@
                 color="primary"
                 [disabled]="isSaveButtonDisabled"
         >Save</button>
-
+        <button mat-button
+                type="button"
+                [disabled]="isResetButtonDisabled"
+                (click)="restoreForm()"
+        >Reset</button>
       </div>
     </form>
   }
