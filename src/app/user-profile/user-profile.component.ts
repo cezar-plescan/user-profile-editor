@@ -51,13 +51,14 @@ export class UserProfileComponent implements OnInit {
 
   protected isLoadRequestInProgress = false;
   protected hasLoadingError = false;
+  protected isSaveRequestInProgress = false;
 
   protected get isSaveButtonDisabled() {
-    return !this.form.valid || this.isFormPristine;
+    return !this.form.valid || this.isFormPristine || this.isSaveRequestInProgress;
   }
 
   protected get isResetButtonDisabled() {
-    return this.isFormPristine;
+    return this.isFormPristine || this.isSaveRequestInProgress;
   }
 
   private userData: UserProfile | null = null;
@@ -106,8 +107,21 @@ export class UserProfileComponent implements OnInit {
   }
 
   protected saveUserData() {
+    // set the saving flag
+    this.isSaveRequestInProgress = true;
+
+    // disable form controls
+    this.disableForm();
+
     this.saveUseData$()
       .pipe(
+        finalize(() => {
+          // clear the saving flag
+          this.isSaveRequestInProgress = false;
+
+          // enable form controls
+          this.enableForm();
+        }),
         catchError(error => {
           // handle server-side validation errors
           if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.BadRequest) {
@@ -159,4 +173,15 @@ export class UserProfileComponent implements OnInit {
       )
   }
 
+  private disableForm() {
+    Object.values(this.form.controls).forEach(control => {
+      control.disable()
+    })
+  }
+
+  private enableForm() {
+    Object.values(this.form.controls).forEach(control => {
+      control.enable()
+    })
+  }
 }
