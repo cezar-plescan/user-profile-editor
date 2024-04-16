@@ -126,6 +126,9 @@ export class UserProfileComponent implements OnInit {
             return EMPTY;
           }
 
+          // display a notification when other errors occur
+          this.notification.display('An unexpected error has occurred. Please try again later.')
+
           // if there is another type of error, throw it again.
           throw error;
         })

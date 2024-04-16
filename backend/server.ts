@@ -76,8 +76,14 @@ app.put('/users/:id', (req, res) => {
   let users = db.users;
 
   const updatedUserData = {...req.body} as User;
-
   const existingUser = users.find(user => String(user.id) == userId);
+
+  // simulate a 500 error
+  if (updatedUserData.name === 'error') {
+    res.status(500).send();
+
+    return;
+  }
 
   // there should be a valid userId
   if (!userId || !existingUser) {
