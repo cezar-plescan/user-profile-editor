@@ -6,7 +6,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { HttpClient, HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
-import { isEqual, pick } from "lodash-es";
+import { isEqual, isString, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 
 interface UserProfile {
@@ -48,8 +48,10 @@ export class UserProfileComponent implements OnInit {
     name: new FormControl('', [Validators.required]),
     email: new FormControl('', [Validators.required, Validators.email]),
     address: new FormControl('', [Validators.required]),
-    avatar: new FormControl('')
+    avatar: new FormControl<string|Blob>('')
   });
+
+  private userData: UserProfile | null = null;
 
   @ViewChild('fileInput')
   protected fileInput!: ElementRef<HTMLInputElement>;
@@ -66,7 +68,17 @@ export class UserProfileComponent implements OnInit {
     return this.isFormPristine || this.isSaveRequestInProgress;
   }
 
-  private userData: UserProfile | null = null;
+  /**
+   * Checks if the form value reflects the last value received from the backend
+   */
+  private get isFormPristine(): boolean {
+    return Boolean(this.userData)
+      && Boolean(this.form.value)
+      && isEqual(
+        this.form.value,
+        pick(this.userData, Object.keys(this.form.value))
+      )
+  }
 
   ngOnInit() {
     this.loadUserData();
@@ -140,13 +152,16 @@ export class UserProfileComponent implements OnInit {
         // store the user data
         this.userData = response.data
 
+        // update the form with the values received from the server
+        this.restoreForm();
+
         // display a success notification
         this.notification.display('The profile was successfully saved');
       })
   }
 
   private saveUseData$() {
-    return this.httpClient.put<UserDataResponse>(`http://localhost:3000/users/1`, this.form.value)
+    return this.httpClient.put<UserDataResponse>(`http://localhost:3000/users/1`, this.getFormData())
   }
 
   private setFormErrors(errorResponse: ValidationErrorResponse | null | undefined) {
@@ -169,23 +184,35 @@ export class UserProfileComponent implements OnInit {
     this.fileInput.nativeElement.value = '';
   }
 
-  /**
-   * Checks if the form value reflects the last value received from the backend
-   */
-  private get isFormPristine(): boolean {
-    return Boolean(this.userData)
-      && Boolean(this.form.value)
-      && isEqual(
-        this.form.value,
-        pick(this.userData, Object.keys(this.form.value))
-      )
-  }
-
   protected onImageSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
 
     if (file) {
       this.form.controls.avatar.setValue(URL.createObjectURL(file));
     }
+  }
+
+  private getFormData() {
+    const formData = new FormData();
+
+    Object.entries(this.form.value).forEach(([fieldName, value]) => {
+      if (fieldName === 'avatar') {
+        value = this.fileInput.nativeElement.files?.[0] || value;
+      }
+
+      formData.append(fieldName, value as string | Blob);
+    })
+
+    return formData;
+  }
+
+  protected getAvatarFullUrl() {
+    if (isString(this.form.controls.avatar.value)
+      && this.form.controls.avatar.value
+      && !this.form.controls.avatar.value.startsWith('blob:http')) {
+      return 'http://localhost:3000/images/' + this.form.controls.avatar.value;
+    }
+
+    return this.form.controls.avatar.value || '/assets/avatar-placeholder.jpg';
   }
 }

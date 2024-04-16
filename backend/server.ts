@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import cors from 'cors';
+import multer from 'multer';
 
 interface DbSchema {
   users: User[]
@@ -17,6 +18,21 @@ export interface User {
 const app = express();
 const port = 3000;
 const dataFilePath = 'backend/db.json'; // File to store user data
+
+// Multer configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'backend/images/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Store with a timestamp
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// Static file serving
+app.use('/images', express.static('backend/images'))
 
 // configure CORS
 const corsOptions: cors.CorsOptions = {
@@ -70,7 +86,7 @@ app.get('/users/:id', (req, res) => {
 });
 
 // Update User
-app.put('/users/:id', (req, res) => {
+app.put('/users/:id', upload.single('avatar'), (req, res) => {
   const userId = String(req.params['id']);
   const db = loadDb();
   let users = db.users;
@@ -108,6 +124,10 @@ app.put('/users/:id', (req, res) => {
     });
 
     return;
+  }
+
+  if (req.file?.filename) {
+    updatedUserData.avatar = req.file.filename
   }
 
   let updatedUser: User = {} as User;

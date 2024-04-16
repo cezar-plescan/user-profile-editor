@@ -46,7 +46,7 @@
         </div>
 
         <div class="avatar-container">
-          <img [src]="form.controls.avatar.value || '/assets/avatar-placeholder.jpg'" alt="avatar"/>
+          <img [src]="getAvatarFullUrl()" alt="avatar"/>
 
           <input #fileInput
                  type="file"
