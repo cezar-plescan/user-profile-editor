@@ -135,6 +135,9 @@ export class UserProfileComponent implements OnInit {
         finalize(() => {
           // clear the saving flag
           this.isSaveRequestInProgress = false;
+
+          // reset the progress
+          this.uploadProgress = 0;
         }),
         catchError(error => {
           // handle server-side validation errors
@@ -163,9 +166,6 @@ export class UserProfileComponent implements OnInit {
 
           // update the form with the values received from the server
           this.restoreForm();
-
-          // reset the progress
-          this.uploadProgress = 0;
 
           // display a success notification
           this.notification.display('The profile was successfully saved');
