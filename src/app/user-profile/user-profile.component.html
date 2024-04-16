@@ -46,7 +46,13 @@
         </div>
 
         <div class="avatar-container">
-          <img src="/assets/avatar-placeholder.jpg" alt="avatar"/>
+          <img [src]="form.controls.avatar.value || '/assets/avatar-placeholder.jpg'" alt="avatar"/>
+
+          <input #fileInput
+                 type="file"
+                 accept="image/*"
+                 (change)="onImageSelected($event)"
+          />
         </div>
 
       </div>

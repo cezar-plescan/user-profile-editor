@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from "@angular/common";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatFormFieldModule } from "@angular/material/form-field";
@@ -50,6 +50,9 @@ export class UserProfileComponent implements OnInit {
     address: new FormControl('', [Validators.required]),
     avatar: new FormControl('')
   });
+
+  @ViewChild('fileInput')
+  protected fileInput!: ElementRef<HTMLInputElement>;
 
   protected isLoadRequestInProgress = false;
   protected hasLoadingError = false;
@@ -161,6 +164,9 @@ export class UserProfileComponent implements OnInit {
 
   protected restoreForm() {
     this.userData && this.updateForm(this.userData);
+
+    // reset the selected image, if any
+    this.fileInput.nativeElement.value = '';
   }
 
   /**
@@ -175,4 +181,11 @@ export class UserProfileComponent implements OnInit {
       )
   }
 
+  protected onImageSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+
+    if (file) {
+      this.form.controls.avatar.setValue(URL.createObjectURL(file));
+    }
+  }
 }
