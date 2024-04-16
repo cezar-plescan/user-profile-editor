@@ -4,10 +4,11 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
-import { HttpClient, HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpEventType, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
 import { isEqual, isString, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
+import { MatProgressBarModule } from "@angular/material/progress-bar";
 
 interface UserProfile {
   id: number;
@@ -36,7 +37,7 @@ export interface ValidationErrorResponse {
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.css'
 })
@@ -59,6 +60,8 @@ export class UserProfileComponent implements OnInit {
   protected isLoadRequestInProgress = false;
   protected hasLoadingError = false;
   protected isSaveRequestInProgress = false;
+
+  protected uploadProgress: number = 0;
 
   protected get isSaveButtonDisabled() {
     return !this.form.valid || this.isFormPristine || this.isSaveRequestInProgress;
@@ -127,7 +130,7 @@ export class UserProfileComponent implements OnInit {
     // set the saving flag
     this.isSaveRequestInProgress = true;
 
-    this.saveUseData$()
+    this.saveUserData$()
       .pipe(
         finalize(() => {
           // clear the saving flag
@@ -148,20 +151,36 @@ export class UserProfileComponent implements OnInit {
           throw error;
         })
       )
-      .subscribe((response) => {
-        // store the user data
-        this.userData = response.data
+      .subscribe((event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.uploadProgress = event.total ?
+            Math.round(100 * event.loaded / event.total) :
+            100;
+        }
+        else if (event.type === HttpEventType.Response) {
+          // store the user data
+          this.userData = event.body!.data
 
-        // update the form with the values received from the server
-        this.restoreForm();
+          // update the form with the values received from the server
+          this.restoreForm();
 
-        // display a success notification
-        this.notification.display('The profile was successfully saved');
+          // reset the progress
+          this.uploadProgress = 0;
+
+          // display a success notification
+          this.notification.display('The profile was successfully saved');
+        }
       })
   }
 
-  private saveUseData$() {
-    return this.httpClient.put<UserDataResponse>(`http://localhost:3000/users/1`, this.getFormData())
+  private saveUserData$() {
+    return this.httpClient.put<UserDataResponse>(
+      `http://localhost:3000/users/1`,
+      this.getFormData(),
+      {
+        reportProgress: true,
+        observe: 'events',
+      })
   }
 
   private setFormErrors(errorResponse: ValidationErrorResponse | null | undefined) {

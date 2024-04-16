@@ -69,6 +69,13 @@
                 (click)="restoreForm()"
         >Reset</button>
       </div>
+
+      <div class="upload-progress-container">
+        <mat-progress-bar *ngIf="uploadProgress"
+                          mode="determinate"
+                          [value]="uploadProgress"></mat-progress-bar>
+      </div>
+
     </form>
   }
 </div>
