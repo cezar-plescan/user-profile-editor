@@ -9,8 +9,8 @@ import { catchError, EMPTY, finalize, map } from "rxjs";
 import { isEqual, isString, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { ValidationErrorPipe } from "./validation-error.pipe";
-import { FieldValidationErrorMessages } from "../types/validation-errors";
+import { ValidationErrorPipe } from "../shared/pipes/validation-error.pipe";
+import { FieldValidationErrorMessages } from "../shared/types/validation-errors";
 
 interface UserProfile {
   id: number;
