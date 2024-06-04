@@ -9,8 +9,8 @@ import { catchError, EMPTY, finalize, map } from "rxjs";
 import { isEqual, isString, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { ValidationErrorPipe } from "../shared/pipes/validation-error.pipe";
 import { FieldValidationErrorMessages } from "../shared/types/validation-errors";
+import { ValidationErrorDirective } from "../shared/directives/validation-error.directive";
 
 interface UserProfile {
   id: number;
@@ -39,7 +39,7 @@ export interface ValidationErrorResponse {
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule, ValidationErrorPipe],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule, ValidationErrorDirective],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.css'
 })

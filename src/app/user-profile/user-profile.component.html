@@ -17,25 +17,19 @@
           <mat-form-field>
             <mat-label>Name</mat-label>
             <input matInput formControlName="name" type="text" />
-            <mat-error>
-              {{ form.get('name')?.errors | validationError:errorMessages?.['name'] }}
-            </mat-error>
+            <mat-error [appValidationError]="form.get('name')?.errors" [customMessages]="errorMessages?.['name']"></mat-error>
           </mat-form-field>
 
           <mat-form-field>
             <mat-label>Email</mat-label>
             <input matInput formControlName="email" type="text" />
-            <mat-error>
-              {{ form.get('email')?.errors | validationError:errorMessages?.['email'] }}
-            </mat-error>
+            <mat-error [appValidationError]="form.get('email')?.errors" [customMessages]="errorMessages?.['email']"></mat-error>
           </mat-form-field>
 
           <mat-form-field>
             <mat-label>Address</mat-label>
             <input matInput formControlName="address" type="text" />
-            <mat-error>
-              {{ form.get('address')?.errors | validationError:errorMessages?.['address'] }}
-            </mat-error>
+            <mat-error [appValidationError]="form.get('address')?.errors" [customMessages]="errorMessages?.['address']"></mat-error>
           </mat-form-field>
         </div>
 
