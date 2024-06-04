@@ -9,6 +9,8 @@ import { catchError, EMPTY, finalize, map } from "rxjs";
 import { isEqual, isString, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
+import { ValidationErrorPipe } from "./validation-error.pipe";
+import { FieldValidationErrorMessages } from "../types/validation-errors";
 
 interface UserProfile {
   id: number;
@@ -37,7 +39,7 @@ export interface ValidationErrorResponse {
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule, ValidationErrorPipe],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.css'
 })
@@ -51,6 +53,18 @@ export class UserProfileComponent implements OnInit {
     address: new FormControl('', [Validators.required]),
     avatar: new FormControl<string|Blob>('')
   });
+
+  protected errorMessages: FieldValidationErrorMessages = {
+    name: {
+      required: 'Please fill in the name'
+    },
+    email: {
+      required: 'Please fill in the email'
+    },
+    address: {
+      required: 'Please fill in the address'
+    },
+  };
 
   private userData: UserProfile | null = null;
 
