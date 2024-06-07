@@ -11,6 +11,7 @@ import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { FieldValidationErrorMessages } from "../shared/types/validation-errors";
 import { ValidationErrorDirective } from "../shared/directives/validation-error.directive";
+import { ImageFormControlComponent } from "../shared/components/image-form-control/image-form-control.component";
 
 interface UserProfile {
   id: number;
@@ -39,7 +40,7 @@ export interface ValidationErrorResponse {
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule, ValidationErrorDirective],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule, ValidationErrorDirective, ImageFormControlComponent],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.css'
 })
@@ -217,14 +218,6 @@ export class UserProfileComponent implements OnInit {
     this.fileInput.nativeElement.value = '';
   }
 
-  protected onImageSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-
-    if (file) {
-      this.form.controls.avatar.setValue(URL.createObjectURL(file));
-    }
-  }
-
   private getFormData() {
     const formData = new FormData();
 
@@ -239,13 +232,4 @@ export class UserProfileComponent implements OnInit {
     return formData;
   }
 
-  protected getAvatarFullUrl() {
-    if (isString(this.form.controls.avatar.value)
-      && this.form.controls.avatar.value
-      && !this.form.controls.avatar.value.startsWith('blob:http')) {
-      return 'http://localhost:3000/images/' + this.form.controls.avatar.value;
-    }
-
-    return this.form.controls.avatar.value || '/assets/avatar-placeholder.jpg';
-  }
 }

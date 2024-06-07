@@ -34,13 +34,7 @@
         </div>
 
         <div class="avatar-container">
-          <img [src]="getAvatarFullUrl()" alt="avatar"/>
-
-          <input #fileInput
-                 type="file"
-                 accept="image/*"
-                 (change)="onImageSelected($event)"
-          />
+          <app-image-form-control formControlName="avatar"></app-image-form-control>
         </div>
 
       </div>
