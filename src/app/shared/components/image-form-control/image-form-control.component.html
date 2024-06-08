@@ -5,7 +5,8 @@
   <span>No avatar</span>
 }
 
-<input type="file"
+<input #fileInput
+       type="file"
        accept="image/*"
        (change)="onImageSelected($event)"
 />

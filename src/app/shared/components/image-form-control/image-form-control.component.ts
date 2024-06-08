@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
 
 @Component({
@@ -20,7 +20,23 @@ export class ImageFormControlComponent implements ControlValueAccessor, OnDestro
   // The source URL for the displayed image
   protected imgSrc?: string;
 
-  registerOnChange(fn: any): void {
+  // A function to notify the form of value changes (set by Angular)
+  protected onChange: Function | undefined;
+
+  /**
+   * Obtains a reference to the file input element using ViewChild.
+   * This reference is used to clear the input's value after an image is selected or written.
+   * The {static: true} option ensures the reference is available during initialization.
+   */
+  @ViewChild('fileInput', {static: true})
+  protected fileInput!: ElementRef<HTMLInputElement>;
+
+  /**
+   * Registers a callback function (fn) that should be called when the control's value changes in the UI.
+   * This function is provided by Angular forms API and is essential for two-way binding.
+   */
+  registerOnChange(fn: Function): void {
+    this.onChange = fn;
   }
 
   registerOnTouched(fn: any): void {
@@ -35,7 +51,10 @@ export class ImageFormControlComponent implements ControlValueAccessor, OnDestro
    * Required by the ControlValueAccessor interface.
    */
   writeValue(value: string): void {
-    this.imgSrc = value ? `http://localhost:3000/images/${value}` : ''
+    this.imgSrc = value ? `http://localhost:3000/images/${value}` : '';
+
+    // Clear the file input element's value after setting the image source
+    this.fileInput.nativeElement.value = '';
   }
 
   /**
@@ -52,6 +71,10 @@ export class ImageFormControlComponent implements ControlValueAccessor, OnDestro
 
       // Generate a temporary URL for the selected image and update the image source.
       this.imgSrc = this.generateImageURL(file);
+
+      // Notify the form control that the value has changed.
+      // This triggers validation and updates the form's state.
+      this.onChange?.(file);
     }
   }
 

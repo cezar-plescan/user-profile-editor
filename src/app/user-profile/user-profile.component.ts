@@ -6,7 +6,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { HttpClient, HttpErrorResponse, HttpEventType, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
-import { isEqual, isString, pick } from "lodash-es";
+import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { FieldValidationErrorMessages } from "../shared/types/validation-errors";
@@ -68,9 +68,6 @@ export class UserProfileComponent implements OnInit {
   };
 
   private userData: UserProfile | null = null;
-
-  @ViewChild('fileInput')
-  protected fileInput!: ElementRef<HTMLInputElement>;
 
   protected isLoadRequestInProgress = false;
   protected hasLoadingError = false;
@@ -213,19 +210,12 @@ export class UserProfileComponent implements OnInit {
 
   protected restoreForm() {
     this.userData && this.updateForm(this.userData);
-
-    // reset the selected image, if any
-    this.fileInput.nativeElement.value = '';
   }
 
   private getFormData() {
     const formData = new FormData();
 
     Object.entries(this.form.value).forEach(([fieldName, value]) => {
-      if (fieldName === 'avatar') {
-        value = this.fileInput.nativeElement.files?.[0] || value;
-      }
-
       formData.append(fieldName, value as string | Blob);
     })
 
