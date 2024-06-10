@@ -54,6 +54,20 @@ function saveUsers(db: DbSchema) {
   fs.writeFileSync(dataFilePath, JSON.stringify(db, null, 2));
 }
 
+// Helper function to generate the full avatar URL
+function getAvatarUrl(req: express.Request, avatarFilename: string | undefined): string {
+  return avatarFilename
+    ? `${req.protocol}://${req.get('host')}/images/${avatarFilename}`
+    : '';
+}
+
+// Returns a new user object with the avatarUrl added
+function buildUserDataResponse(req: express.Request, user: User): User {
+  const avatar = getAvatarUrl(req, user.avatar);
+
+  return { ...user, avatar };
+}
+
 // Get Users
 app.get('/users', (req, res) => {
   const users = loadDb();
@@ -80,7 +94,7 @@ app.get('/users/:id', (req, res) => {
   else {
     res.json({
       status: 'ok',
-      data: user
+      data: buildUserDataResponse(req, user)
     });
   }
 });
@@ -144,9 +158,11 @@ app.put('/users/:id', upload.single('avatar'), (req, res) => {
 
   saveUsers({...db, users});
 
-  res.send({status: 'ok', data: updatedUser});
+  res.send({
+    status: 'ok',
+    data: buildUserDataResponse(req, updatedUserData)
+  });
 });
-
 
 // Server Startup
 app.listen(port);

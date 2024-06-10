@@ -56,7 +56,7 @@ export class ImageFormControlComponent implements ControlValueAccessor, OnDestro
    * Required by the ControlValueAccessor interface.
    */
   writeValue(value: string): void {
-    this.imgSrc = value ? `http://localhost:3000/images/${value}` : '';
+    this.imgSrc = value;
 
     // Clear the file input element's value after setting the image source
     this.fileInput.nativeElement.value = '';
