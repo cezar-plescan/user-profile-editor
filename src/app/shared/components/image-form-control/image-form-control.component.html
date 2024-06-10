@@ -2,11 +2,21 @@
   <img [src]="imgSrc" alt="avatar" width="100%"/>
 }
 @else {
-  <span>No avatar</span>
+  <span class="no-avatar">No avatar<br/>Choose an image to upload</span>
 }
 
 <input #fileInput
+       hidden
        type="file"
        accept="image/*"
        (change)="onImageSelected($event)"
 />
+
+<button class="upload-button"
+        mat-mini-fab
+        color="primary"
+        (click)="fileInput.click()"
+        type="button"
+>
+  <mat-icon>attach_file</mat-icon>
+</button>

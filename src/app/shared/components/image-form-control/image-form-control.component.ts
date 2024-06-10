@@ -1,10 +1,15 @@
 import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: 'app-image-form-control',
   standalone: true,
-  imports: [],
+  imports: [
+    MatButtonModule,
+    MatIconModule
+  ],
   templateUrl: './image-form-control.component.html',
   styleUrl: './image-form-control.component.css',
   // Register this component as a ControlValueAccessor
