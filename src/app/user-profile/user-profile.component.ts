@@ -4,7 +4,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
-import { HttpClient, HttpErrorResponse, HttpEventType, HttpStatusCode } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpStatusCode } from "@angular/common/http";
 import { catchError, EMPTY, finalize, map } from "rxjs";
 import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
@@ -12,6 +12,7 @@ import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { FieldValidationErrorMessages } from "../shared/types/validation-errors";
 import { ValidationErrorDirective } from "../shared/directives/validation-error.directive";
 import { ImageFormControlComponent } from "../shared/components/image-form-control/image-form-control.component";
+import { tapValidationErrors } from "../shared/rxjs-operators/tap-validation-errors";
 
 interface UserProfile {
   id: number;
@@ -151,14 +152,11 @@ export class UserProfileComponent implements OnInit {
           // reset the progress
           this.uploadProgress = 0;
         }),
+        // handle server-side validation errors
+        tapValidationErrors(errors => {
+          this.setFormErrors(errors.error)
+        }),
         catchError(error => {
-          // handle server-side validation errors
-          if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.BadRequest) {
-            this.setFormErrors(error.error)
-
-            return EMPTY;
-          }
-
           // display a notification when other errors occur
           this.notification.display('An unexpected error has occurred. Please try again later.')
 
