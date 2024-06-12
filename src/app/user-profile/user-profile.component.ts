@@ -13,6 +13,7 @@ import { FieldValidationErrorMessages } from "../shared/types/validation-errors"
 import { ValidationErrorDirective } from "../shared/directives/validation-error.directive";
 import { ImageFormControlComponent } from "../shared/components/image-form-control/image-form-control.component";
 import { tapValidationErrors } from "../shared/rxjs-operators/tap-validation-errors";
+import { tapUploadProgress } from "../shared/rxjs-operators/tap-upload-progress";
 
 interface UserProfile {
   id: number;
@@ -156,6 +157,9 @@ export class UserProfileComponent implements OnInit {
         tapValidationErrors(errors => {
           this.setFormErrors(errors.error)
         }),
+        tapUploadProgress(progress => {
+          this.uploadProgress = progress;
+        }),
         catchError(error => {
           // display a notification when other errors occur
           this.notification.display('An unexpected error has occurred. Please try again later.')
@@ -165,12 +169,7 @@ export class UserProfileComponent implements OnInit {
         })
       )
       .subscribe((event) => {
-        if (event.type === HttpEventType.UploadProgress) {
-          this.uploadProgress = event.total ?
-            Math.round(100 * event.loaded / event.total) :
-            100;
-        }
-        else if (event.type === HttpEventType.Response) {
+        if (event.type === HttpEventType.Response) {
           // store the user data
           this.userData = event.body!.data
 
