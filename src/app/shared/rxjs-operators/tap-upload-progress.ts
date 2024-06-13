@@ -1,5 +1,7 @@
 import { tap } from "rxjs";
 import { HttpEvent, HttpEventType } from "@angular/common/http";
+import { HttpClientResponse } from "../types/http-response";
+import { isPlainObject } from "lodash-es";
 
 /**
  * A custom RxJS operator that taps into the HTTP request observable to extract and report upload progress.
@@ -17,8 +19,12 @@ export function tapUploadProgress<T>( callback: ( progress: number ) => void ) {
    *
    * @param event An HttpEvent object representing an event in the HTTP request/response lifecycle.
    */
-  return tap((event: HttpEvent<T>) => {
-    if (event.type === HttpEventType.UploadProgress && event.total) {
+  return tap((value: HttpClientResponse<T>) => {
+    const event = value as HttpEvent<T>;
+
+    if (isPlainObject(event)
+      && event.type === HttpEventType.UploadProgress
+      && event.total) {
       // Calculate and emit the upload progress percentage
       const progress = Math.round((100 * event.loaded) / event.total);
 

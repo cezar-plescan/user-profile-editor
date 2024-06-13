@@ -1,5 +1,6 @@
 import { catchError, EMPTY, OperatorFunction } from "rxjs";
-import { HttpErrorResponse, HttpEvent, HttpStatusCode } from "@angular/common/http";
+import { HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
+import { HttpClientResponse } from "../types/http-response";
 
 /**
  * A custom RxJS operator that taps into the observable stream to handle HTTP validation errors.
@@ -10,7 +11,7 @@ import { HttpErrorResponse, HttpEvent, HttpStatusCode } from "@angular/common/ht
  * @returns An RxJS operator function that catches validation errors, calls the callback function,
  *          and then completes the stream to prevent further processing.
  */
-export function tapValidationErrors<T>(callback: (error: HttpErrorResponse ) => void ): OperatorFunction<HttpEvent<T>, HttpEvent<T>> {
+export function tapValidationErrors<T>(callback: (error: HttpErrorResponse ) => void ): OperatorFunction<HttpClientResponse<T>, HttpClientResponse<T>> {
   return catchError((error: HttpErrorResponse | Error) => {
       // Check if the error is an HttpErrorResponse with status code 400 (Bad Request), which is the format defined by the server
       if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.BadRequest) {

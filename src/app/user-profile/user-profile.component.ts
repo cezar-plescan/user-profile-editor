@@ -4,8 +4,8 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
-import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpStatusCode } from "@angular/common/http";
-import { catchError, EMPTY, finalize, map } from "rxjs";
+import { HttpClient } from "@angular/common/http";
+import { catchError, EMPTY, finalize } from "rxjs";
 import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
@@ -14,6 +14,8 @@ import { ValidationErrorDirective } from "../shared/directives/validation-error.
 import { ImageFormControlComponent } from "../shared/components/image-form-control/image-form-control.component";
 import { tapValidationErrors } from "../shared/rxjs-operators/tap-validation-errors";
 import { tapUploadProgress } from "../shared/rxjs-operators/tap-upload-progress";
+import { tapResponseData } from "../shared/rxjs-operators/tap-response-data";
+import { ApiSuccessResponse, ApiValidationErrorResponse } from "../shared/types/http-response";
 
 interface UserProfile {
   id: number;
@@ -23,21 +25,9 @@ interface UserProfile {
   avatar: string;
 }
 
+type UserDataResponse = ApiSuccessResponse<UserProfile>;
+
 type UserProfileForm = Pick<UserProfile, "name" | "email" | "address" | "avatar">
-
-interface UserDataResponse {
-  status: 'ok';
-  data: UserProfile;
-}
-
-export interface ValidationErrorResponse {
-  message: string;
-  errors: {
-    field: string;
-    message: string;
-    code: string;
-  }[]
-}
 
 @Component({
   selector: 'app-user-profile',
@@ -111,28 +101,29 @@ export class UserProfileComponent implements OnInit {
           // clear the loading flag when the request completes
           this.isLoadRequestInProgress = false;
         }),
-        catchError((error: HttpErrorResponse) => {
+        tapResponseData(data => {
+            // clear the loading error flag
+            this.hasLoadingError = false;
+
+            // store the user data
+            this.userData = data
+
+            // display the user data in the form
+            this.updateForm(this.userData);
+        }),
+        catchError(() => {
           // set the loading error flag
           this.hasLoadingError = true;
 
           return EMPTY;
         })
       )
-      .subscribe(userData => {
-        // clear the loading error flag
-        this.hasLoadingError = false;
-
-        // store the user data
-        this.userData = userData
-
-        // display the user data in the form
-        this.updateForm(userData);
-      })
+      .subscribe()
   }
 
   private getUserData$() {
-    return this.httpClient.get<UserDataResponse>(`http://localhost:3000/users/1`).pipe(
-      map(response => response.data)
+    return this.httpClient.get<UserDataResponse>(
+      `http://localhost:3000/users/1`
     );
   }
 
@@ -153,6 +144,16 @@ export class UserProfileComponent implements OnInit {
           // reset the progress
           this.uploadProgress = 0;
         }),
+        tapResponseData(data => {
+          // store the user data
+          this.userData = data
+
+          // update the form with the values received from the server
+          this.restoreForm();
+
+          // display a success notification
+          this.notification.display('The profile was successfully saved');
+        }),
         // handle server-side validation errors
         tapValidationErrors(errors => {
           this.setFormErrors(errors.error)
@@ -168,18 +169,7 @@ export class UserProfileComponent implements OnInit {
           throw error;
         })
       )
-      .subscribe((event) => {
-        if (event.type === HttpEventType.Response) {
-          // store the user data
-          this.userData = event.body!.data
-
-          // update the form with the values received from the server
-          this.restoreForm();
-
-          // display a success notification
-          this.notification.display('The profile was successfully saved');
-        }
-      })
+      .subscribe()
   }
 
   private saveUserData$() {
@@ -192,7 +182,7 @@ export class UserProfileComponent implements OnInit {
       })
   }
 
-  private setFormErrors(errorResponse: ValidationErrorResponse | null | undefined) {
+  private setFormErrors(errorResponse: ApiValidationErrorResponse | null | undefined) {
     if (!errorResponse || !errorResponse.errors) {
       this.form.setErrors(null);
       return;
