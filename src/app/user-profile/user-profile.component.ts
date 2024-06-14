@@ -5,7 +5,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { HttpClient } from "@angular/common/http";
-import { catchError, EMPTY, finalize } from "rxjs";
+import { catchError, finalize } from "rxjs";
 import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
@@ -16,6 +16,7 @@ import { tapValidationErrors } from "../shared/rxjs-operators/tap-validation-err
 import { tapUploadProgress } from "../shared/rxjs-operators/tap-upload-progress";
 import { tapResponseData } from "../shared/rxjs-operators/tap-response-data";
 import { ApiSuccessResponse, ApiValidationErrorResponse } from "../shared/types/http-response";
+import { tapError } from "../shared/rxjs-operators/tap-error";
 
 interface UserProfile {
   id: number;
@@ -111,11 +112,9 @@ export class UserProfileComponent implements OnInit {
             // display the user data in the form
             this.updateForm(this.userData);
         }),
-        catchError(() => {
+        tapError(() => {
           // set the loading error flag
           this.hasLoadingError = true;
-
-          return EMPTY;
         })
       )
       .subscribe()
