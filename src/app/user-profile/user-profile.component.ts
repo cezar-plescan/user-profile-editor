@@ -5,7 +5,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { HttpClient } from "@angular/common/http";
-import { catchError, finalize } from "rxjs";
+import { finalize } from "rxjs";
 import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
@@ -160,12 +160,9 @@ export class UserProfileComponent implements OnInit {
         tapUploadProgress(progress => {
           this.uploadProgress = progress;
         }),
-        catchError(error => {
+        tapError(() => {
           // display a notification when other errors occur
           this.notification.display('An unexpected error has occurred. Please try again later.')
-
-          // if there is another type of error, throw it again.
-          throw error;
         })
       )
       .subscribe()
