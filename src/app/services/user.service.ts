@@ -2,6 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { UserDataResponse, UserProfileForm } from "../shared/types/user.type";
 import { HttpHelperService } from "./http-helper.service";
+import { environment } from "../../environments/environment";
+
+const USERS_API_PATH = 'users';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +23,7 @@ export class UserService {
    */
   getUserData$() {
     return this.httpClient.get<UserDataResponse>(
-      `http://localhost:3000/users/1`
+      `${environment.apiBaseUrl}/${USERS_API_PATH}/1`
     );
   }
 
@@ -33,7 +36,7 @@ export class UserService {
    */
   saveUserData$(userData: UserProfileForm) {
     return this.httpClient.put<UserDataResponse>(
-      `http://localhost:3000/users/1`,
+      `${environment.apiBaseUrl}/${USERS_API_PATH}/1`,
       this.httpHelper.generateFormData(userData),
       {
         // Enable progress reporting for file uploads
