@@ -1,5 +1,5 @@
 import { EnvironmentProviders, InjectionToken, makeEnvironmentProviders, Provider } from "@angular/core";
-import { ValidationErrorMessages } from "../shared/types/validation-errors";
+import { ValidationErrorMessages } from "../shared/types/validation-errors.type";
 import { ERROR_MESSAGES_VALUE } from "./validation-error-messages.constant";
 
 // An InjectionToken used to provide and inject error message configuration.

@@ -1,4 +1,4 @@
-import { ValidationErrorMessages } from "../shared/types/validation-errors";
+import { ValidationErrorMessages } from "../shared/types/validation-errors.type";
 
 // Default error messages for common validation errors.
 // These serve as the fallback messages when custom messages are not provided.

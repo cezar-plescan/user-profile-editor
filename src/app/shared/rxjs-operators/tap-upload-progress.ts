@@ -1,6 +1,6 @@
 import { tap } from "rxjs";
 import { HttpEvent, HttpEventType } from "@angular/common/http";
-import { HttpClientResponse } from "../types/http-response";
+import { HttpClientResponse } from "../types/http-response.type";
 import { isPlainObject } from "lodash-es";
 
 /**

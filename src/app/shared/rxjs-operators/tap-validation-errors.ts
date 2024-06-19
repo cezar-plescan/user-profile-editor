@@ -1,6 +1,6 @@
 import { catchError, EMPTY, OperatorFunction } from "rxjs";
 import { HttpErrorResponse, HttpStatusCode } from "@angular/common/http";
-import { HttpClientResponse } from "../types/http-response";
+import { HttpClientResponse } from "../types/http-response.type";
 
 /**
  * A custom RxJS operator that taps into the observable stream to handle HTTP validation errors.

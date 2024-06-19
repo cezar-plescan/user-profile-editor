@@ -1,6 +1,6 @@
 import { Directive, ElementRef, inject, Input, OnChanges } from '@angular/core';
 import { ValidationErrors } from "@angular/forms";
-import { ValidationErrorMessages } from "../types/validation-errors";
+import { ValidationErrorMessages } from "../types/validation-errors.type";
 import { ERROR_MESSAGES } from "../../core/validation-error-messages.provider";
 
 /**

@@ -1,7 +1,7 @@
 import { tap } from "rxjs";
 import { HttpResponse } from "@angular/common/http";
 import { isPlainObject } from "lodash-es";
-import { HttpClientResponse, ApiSuccessResponse } from "../types/http-response";
+import { ApiSuccessResponse, HttpClientResponse } from "../types/http-response.type";
 
 /**
  * A custom RxJS operator that taps into an HTTP response observable to extract the data payload.

@@ -4,31 +4,20 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
-import { HttpClient } from "@angular/common/http";
 import { finalize } from "rxjs";
 import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { FieldValidationErrorMessages } from "../shared/types/validation-errors";
+import { FieldValidationErrorMessages } from "../shared/types/validation-errors.type";
 import { ValidationErrorDirective } from "../shared/directives/validation-error.directive";
 import { ImageFormControlComponent } from "../shared/components/image-form-control/image-form-control.component";
 import { tapValidationErrors } from "../shared/rxjs-operators/tap-validation-errors";
 import { tapUploadProgress } from "../shared/rxjs-operators/tap-upload-progress";
 import { tapResponseData } from "../shared/rxjs-operators/tap-response-data";
-import { ApiSuccessResponse, ApiValidationErrorResponse } from "../shared/types/http-response";
+import { ApiValidationErrorResponse } from "../shared/types/http-response.type";
 import { tapError } from "../shared/rxjs-operators/tap-error";
-
-interface UserProfile {
-  id: number;
-  name: string;
-  email: string;
-  address: string;
-  avatar: string;
-}
-
-type UserDataResponse = ApiSuccessResponse<UserProfile>;
-
-type UserProfileForm = Pick<UserProfile, "name" | "email" | "address" | "avatar">
+import { UserProfile, UserProfileForm } from "../shared/types/user.type";
+import { UserService } from "../services/user.service";
 
 @Component({
   selector: 'app-user-profile',
@@ -38,8 +27,8 @@ type UserProfileForm = Pick<UserProfile, "name" | "email" | "address" | "avatar"
   styleUrl: './user-profile.component.css'
 })
 export class UserProfileComponent implements OnInit {
-  private httpClient = inject(HttpClient);
   private notification = inject(NotificationService);
+  private userService = inject(UserService);
 
   protected form = inject(FormBuilder).group({
     name: new FormControl('', [Validators.required]),
@@ -96,7 +85,7 @@ export class UserProfileComponent implements OnInit {
     // set the loading flag when the request is initiated
     this.isLoadRequestInProgress = true;
 
-    this.getUserData$()
+    this.userService.getUserData$()
       .pipe(
         finalize(() => {
           // clear the loading flag when the request completes
@@ -120,12 +109,6 @@ export class UserProfileComponent implements OnInit {
       .subscribe()
   }
 
-  private getUserData$() {
-    return this.httpClient.get<UserDataResponse>(
-      `http://localhost:3000/users/1`
-    );
-  }
-
   private updateForm(userData: UserProfile) {
     this.form.reset(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
   }
@@ -134,7 +117,7 @@ export class UserProfileComponent implements OnInit {
     // set the saving flag
     this.isSaveRequestInProgress = true;
 
-    this.saveUserData$()
+    this.userService.saveUserData$(this.form.value as UserProfileForm)
       .pipe(
         finalize(() => {
           // clear the saving flag
@@ -168,16 +151,6 @@ export class UserProfileComponent implements OnInit {
       .subscribe()
   }
 
-  private saveUserData$() {
-    return this.httpClient.put<UserDataResponse>(
-      `http://localhost:3000/users/1`,
-      this.getFormData(),
-      {
-        reportProgress: true,
-        observe: 'events',
-      })
-  }
-
   private setFormErrors(errorResponse: ApiValidationErrorResponse | null | undefined) {
     if (!errorResponse || !errorResponse.errors) {
       this.form.setErrors(null);
@@ -193,16 +166,6 @@ export class UserProfileComponent implements OnInit {
 
   protected restoreForm() {
     this.userData && this.updateForm(this.userData);
-  }
-
-  private getFormData() {
-    const formData = new FormData();
-
-    Object.entries(this.form.value).forEach(([fieldName, value]) => {
-      formData.append(fieldName, value as string | Blob);
-    })
-
-    return formData;
   }
 
 }
