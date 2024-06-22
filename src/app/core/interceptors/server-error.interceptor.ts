@@ -1,5 +1,5 @@
-import { HttpEvent, HttpInterceptorFn, HttpResponse, HttpStatusCode } from '@angular/common/http';
-import { tap } from "rxjs";
+import { HttpErrorResponse, HttpEvent, HttpInterceptorFn, HttpResponse, HttpStatusCode } from '@angular/common/http';
+import { catchError, tap } from "rxjs";
 import { isPlainObject } from "lodash-es";
 import { inject } from "@angular/core";
 import { MatSnackBar } from "@angular/material/snack-bar";
@@ -14,12 +14,28 @@ class HttpResponseBodyFormatError extends Error {
 }
 
 /**
- * HttpInterceptor function that intercepts and validates the format of successful (200 OK) responses.
- * If the response doesn't match the expected format, it throws an HttpResponseBodyFormatError
- * and displays an error notification to the user.
+ * Custom error class for handling network connection errors (e.g., no internet).
+ * Includes a `wasCaught` flag to track whether the error was already handled by the interceptor.
+ */
+class HttpNoNetworkConnectionError extends Error {
+  // Flag to indicate if this error has been handled
+  wasCaught = false;
+
+  constructor() {
+    super('No network connection');
+  }
+}
+
+/**
+ * HTTP interceptor function that intercepts and validates HTTP responses.
  *
- * @param req The intercepted HttpRequest.
- * @param next The HttpHandler to pass the request to.
+ * It performs the following checks:
+ * 1. Verifies if a 200 OK response has a valid format.
+ * 2. Detects potential network connection errors.
+ * 3. Re-throws other errors for higher-level handling.
+ *
+ * @param req - The intercepted HttpRequest.
+ * @param next - The HttpHandler to pass the request to.
  * @returns An Observable of HttpEvent<any>.
  */
 export const serverErrorInterceptor: HttpInterceptorFn = (req, next) => {
@@ -46,6 +62,31 @@ export const serverErrorInterceptor: HttpInterceptorFn = (req, next) => {
         // enabling appropriate error recovery or logging mechanisms.
         throw error;
       }
+    }),
+    catchError(error => {
+      // Handle network connection errors specifically
+      if (checkNoNetworkConnection(error)) {
+        // Show a user-friendly message
+        snackbar.open('No network connection. Please try again later.');
+
+        // Create a custom network error
+        const error = new HttpNoNetworkConnectionError();
+
+        // Log the error for debugging purposes
+        console.warn(error);
+
+        // Mark the error as caught to prevent duplicate handling
+        error.wasCaught = true;
+
+        // Re-throw the (modified) network error to allow for potential additional handling
+        // in the component or other error handlers further down the line.
+        throw error;
+      }
+
+      // For all other types of errors (e.g., server errors, timeouts),
+      // simply re-throw the error so that it can be handled by a higher-level error handler
+      // (e.g., a global error handler or a catchError in the component).
+      throw error;
     })
   );
 };
@@ -79,4 +120,21 @@ function check200ResponseBodyFormat(response: HttpResponse<any>): boolean {
   return isPlainObject(response.body)
     && response.body.status === 'ok'
     && response.body.data !== undefined
+}
+
+/**
+ * Helper function to check if an error is likely due to a network connection issue.
+ *
+ * @param error The error object to check.
+ * @returns `true` if it's likely a network error, `false` otherwise.
+ */
+function checkNoNetworkConnection(error: any): boolean {
+  return(
+    error instanceof HttpErrorResponse
+    && !error.headers.keys().length
+    && !error.ok
+    && !error.status
+    && !error.error.loaded
+    && !error.error.total
+  )
 }

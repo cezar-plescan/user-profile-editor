@@ -113,41 +113,58 @@ export class UserProfileComponent implements OnInit {
     this.form.reset(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
   }
 
+  /**
+   * Initiates the process of saving the user data to the server.
+   * This method handles UI interactions, error handling, and progress tracking during the save operation.
+   */
   protected saveUserData() {
-    // set the saving flag
+    // Set the flag to indicate that a save request is in progress
     this.isSaveRequestInProgress = true;
 
     this.userService.saveUserData$(this.form.value as UserProfileForm)
       .pipe(
         finalize(() => {
-          // clear the saving flag
+          // Clear the saving flag when the request is complete (success or error)
           this.isSaveRequestInProgress = false;
 
-          // reset the progress
+          // Reset the upload progress to 0
           this.uploadProgress = 0;
         }),
+        // Handle successful response
         tapResponseData(data => {
-          // store the user data
+          // Store the updated user data
           this.userData = data
 
-          // update the form with the values received from the server
+          // Update the form with the new data
           this.restoreForm();
 
-          // display a success notification
+          // Display a success notification
           this.notification.display('The profile was successfully saved');
         }),
-        // handle server-side validation errors
+        // Handle validation errors (HTTP 400 Bad Request) from the server
         tapValidationErrors(errors => {
-          this.setFormErrors(errors.error)
+          // Set the validation errors on the form
+          this.setFormErrors(errors.error);
         }),
         tapUploadProgress(progress => {
+          // Update the upload progress bar based on the progress received from the server
           this.uploadProgress = progress;
         }),
-        tapError(() => {
-          // display a notification when other errors occur
-          this.notification.display('An unexpected error has occurred. Please try again later.')
+        /**
+         * Taps into the observable stream to handle errors.
+         *
+         * @param error The HttpErrorResponse object containing details about the HTTP error.
+         * @param wasCaught A flag indicating whether the error was already handled by the interceptor.
+         */
+        tapError((_, wasCaught) => {
+          // Display a notification for unhandled errors, ensuring that errors already
+          // handled by the interceptor (like network errors) are not displayed again.
+          if (!wasCaught) {
+            this.notification.display('An unexpected error has occurred. Please try again later.')
+          }
         })
       )
+      // Subscribe to the observable to trigger the request
       .subscribe()
   }
 
