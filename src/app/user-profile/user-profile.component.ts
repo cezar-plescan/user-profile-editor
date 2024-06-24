@@ -149,19 +149,6 @@ export class UserProfileComponent implements OnInit {
         tapUploadProgress(progress => {
           // Update the upload progress bar based on the progress received from the server
           this.uploadProgress = progress;
-        }),
-        /**
-         * Taps into the observable stream to handle errors.
-         *
-         * @param error The HttpErrorResponse object containing details about the HTTP error.
-         * @param wasCaught A flag indicating whether the error was already handled by the interceptor.
-         */
-        tapError((_, wasCaught) => {
-          // Display a notification for unhandled errors, ensuring that errors already
-          // handled by the interceptor (like network errors) are not displayed again.
-          if (!wasCaught) {
-            this.notification.display('An unexpected error has occurred. Please try again later.')
-          }
         })
       )
       // Subscribe to the observable to trigger the request

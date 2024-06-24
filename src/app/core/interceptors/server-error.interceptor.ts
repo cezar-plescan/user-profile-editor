@@ -27,15 +27,25 @@ class HttpNoNetworkConnectionError extends Error {
 }
 
 /**
- * HTTP interceptor function that intercepts and validates HTTP responses.
+ * Constant object containing error messages for display in the UI.
+ */
+const MESSAGES = {
+  INTERNAL_ERROR: 'An internal error has occurred. Please try again later.',
+  NO_CONNECTION: 'No network connection. Please try again later.'
+}
+
+/**
+ * HTTP interceptor function that intercepts and handles HTTP responses and errors.
  *
- * It performs the following checks:
- * 1. Verifies if a 200 OK response has a valid format.
- * 2. Detects potential network connection errors.
- * 3. Re-throws other errors for higher-level handling.
+ * This interceptor focuses on error scenarios, performing the following tasks:
+ * 1. Checks if the response is a successful HTTP response (200 OK) with an invalid format.
+ * 2. Specifically handles network connection errors, displaying a notification to the user.
+ * 3. Skips explicit handling of 400 Bad Request errors, as they are expected to be validation errors
+ *    and are typically handled by other mechanisms within the application (e.g., tapValidationErrors operator).
+ * 4. Re-throws other HTTP errors to be handled by downstream operators or the global error handler.
  *
- * @param req - The intercepted HttpRequest.
- * @param next - The HttpHandler to pass the request to.
+ * @param req The intercepted HttpRequest.
+ * @param next The HttpHandler to pass the request to.
  * @returns An Observable of HttpEvent<any>.
  */
 export const serverErrorInterceptor: HttpInterceptorFn = (req, next) => {
@@ -48,44 +58,43 @@ export const serverErrorInterceptor: HttpInterceptorFn = (req, next) => {
       // Checks if the HttpEvent is a successful (200 OK) HttpResponse,
       // but has an invalid response body format.
       if (checkInvalid200Response(httpEvent)) {
-        // If the response doesn't match the expected format, notify the user.
-        snackbar.open('An internal error has occurred. Please try again later.');
-
-        const error = new HttpResponseBodyFormatError();
-
-        // Log a warning message to the console with details of the error and the invalid response.
-        // This can aid in debugging and identifying issues with the backend API.
-        console.warn(error)
-
         // Throws a custom HttpResponseBodyFormatError to signal the invalid response format.
-        // This error will be caught and handled by a higher-level error handler in the application,
-        // enabling appropriate error recovery or logging mechanisms.
-        throw error;
+        // This error will be caught and handled by the subsequent catchError operator,
+        // which will display the appropriate error message to the user.
+        throw new HttpResponseBodyFormatError();
       }
     }),
     catchError(error => {
+      let errorMessage: string;
+
       // Handle network connection errors specifically
       if (checkNoNetworkConnection(error)) {
-        // Show a user-friendly message
-        snackbar.open('No network connection. Please try again later.');
+        // Set specific message for network errors
+        errorMessage = MESSAGES.NO_CONNECTION;
 
-        // Create a custom network error
-        const error = new HttpNoNetworkConnectionError();
-
-        // Log the error for debugging purposes
-        console.warn(error);
+        // Create a custom network error object
+        error = new HttpNoNetworkConnectionError();
 
         // Mark the error as caught to prevent duplicate handling
         error.wasCaught = true;
-
-        // Re-throw the (modified) network error to allow for potential additional handling
-        // in the component or other error handlers further down the line.
-        throw error;
+      }
+      else if (is400ResponseError(error)) {
+        // Explicitly skip handling 400 errors here (handled by tapValidationErrors operator)
+        // This ensures that validation errors are handled in the component,
+        // while other errors (e.g., 5xx, 4xx) fall through to the next case.
+        errorMessage = '';
+      }
+      else {
+        // For all other server errors or unexpected errors, display a generic error message.
+        errorMessage = MESSAGES.INTERNAL_ERROR
       }
 
-      // For all other types of errors (e.g., server errors, timeouts),
-      // simply re-throw the error so that it can be handled by a higher-level error handler
-      // (e.g., a global error handler or a catchError in the component).
+      // Show a Snackbar notification if an error message is available.
+      if (errorMessage) {
+        snackbar.open(errorMessage);
+      }
+
+      // Re-throw the error for handling in the component or a global error handler.
       throw error;
     })
   );
@@ -137,4 +146,14 @@ function checkNoNetworkConnection(error: any): boolean {
     && !error.error.loaded
     && !error.error.total
   )
+}
+
+/**
+ * Checks if the given error is a 400 Bad Request error from the server.
+ *
+ * @param error The error object to check.
+ * @returns True if the error is an HttpErrorResponse with status code 400 (Bad Request), false otherwise.
+ */
+function is400ResponseError(error: any) {
+  return (error instanceof HttpErrorResponse && error.status === HttpStatusCode.BadRequest);
 }
