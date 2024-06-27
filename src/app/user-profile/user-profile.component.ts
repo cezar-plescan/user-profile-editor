@@ -1,11 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from "@angular/common";
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
 import { finalize } from "rxjs";
-import { isEqual, pick } from "lodash-es";
 import { NotificationService } from "../services/notification.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { FieldValidationErrorMessages } from "../shared/types/validation-errors.type";
@@ -14,10 +13,10 @@ import { ImageFormControlComponent } from "../shared/components/image-form-contr
 import { tapValidationErrors } from "../shared/rxjs-operators/tap-validation-errors";
 import { tapUploadProgress } from "../shared/rxjs-operators/tap-upload-progress";
 import { tapResponseData } from "../shared/rxjs-operators/tap-response-data";
-import { ApiValidationErrorResponse } from "../shared/types/http-response.type";
 import { tapError } from "../shared/rxjs-operators/tap-error";
 import { UserProfile, UserProfileForm } from "../shared/types/user.type";
 import { UserService } from "../services/user.service";
+import { FormHandlerService } from "../services/form-handler.service";
 
 @Component({
   selector: 'app-user-profile',
@@ -29,12 +28,13 @@ import { UserService } from "../services/user.service";
 export class UserProfileComponent implements OnInit {
   private notification = inject(NotificationService);
   private userService = inject(UserService);
+  private formHandlerService = inject<FormHandlerService<UserProfileForm, UserProfile>>(FormHandlerService);
 
   protected form = inject(FormBuilder).group({
-    name: new FormControl('', [Validators.required]),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    address: new FormControl('', [Validators.required]),
-    avatar: new FormControl<string|Blob>('')
+    name: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    address: ['', [Validators.required]],
+    avatar: ['' as string | Blob]
   });
 
   protected errorMessages: FieldValidationErrorMessages = {
@@ -58,23 +58,11 @@ export class UserProfileComponent implements OnInit {
   protected uploadProgress: number = 0;
 
   protected get isSaveButtonDisabled() {
-    return !this.form.valid || this.isFormPristine || this.isSaveRequestInProgress;
+    return this.formHandlerService.isSaveDisabled(this.form, this.userData, this.isSaveRequestInProgress);
   }
 
   protected get isResetButtonDisabled() {
-    return this.isFormPristine || this.isSaveRequestInProgress;
-  }
-
-  /**
-   * Checks if the form value reflects the last value received from the backend
-   */
-  private get isFormPristine(): boolean {
-    return Boolean(this.userData)
-      && Boolean(this.form.value)
-      && isEqual(
-        this.form.value,
-        pick(this.userData, Object.keys(this.form.value))
-      )
+    return this.formHandlerService.isResetDisabled(this.form, this.userData, this.isSaveRequestInProgress);
   }
 
   ngOnInit() {
@@ -99,7 +87,7 @@ export class UserProfileComponent implements OnInit {
             this.userData = data
 
             // display the user data in the form
-            this.updateForm(this.userData);
+            this.formHandlerService.updateForm(this.form, this.userData);
         }),
         tapError(() => {
           // set the loading error flag
@@ -107,10 +95,6 @@ export class UserProfileComponent implements OnInit {
         })
       )
       .subscribe()
-  }
-
-  private updateForm(userData: UserProfile) {
-    this.form.reset(pick(userData, Object.keys(this.form.value)) as UserProfileForm)
   }
 
   /**
@@ -144,7 +128,7 @@ export class UserProfileComponent implements OnInit {
         // Handle validation errors (HTTP 400 Bad Request) from the server
         tapValidationErrors(errors => {
           // Set the validation errors on the form
-          this.setFormErrors(errors.error);
+          this.formHandlerService.setFormErrors(this.form, errors.error);
         }),
         tapUploadProgress(progress => {
           // Update the upload progress bar based on the progress received from the server
@@ -155,21 +139,8 @@ export class UserProfileComponent implements OnInit {
       .subscribe()
   }
 
-  private setFormErrors(errorResponse: ApiValidationErrorResponse | null | undefined) {
-    if (!errorResponse || !errorResponse.errors) {
-      this.form.setErrors(null);
-      return;
-    }
-
-    errorResponse.errors.forEach(error => {
-      this.form.get(error.field)?.setErrors({
-        [error.code]: error.message
-      })
-    })
-  }
-
   protected restoreForm() {
-    this.userData && this.updateForm(this.userData);
+    this.formHandlerService.restoreForm(this.form, this.userData);
   }
 
 }
