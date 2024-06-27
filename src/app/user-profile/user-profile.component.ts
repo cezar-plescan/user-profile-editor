@@ -23,7 +23,11 @@ import { FormHandlerService } from "../services/form-handler.service";
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, NgOptimizedImage, MatProgressBarModule, ValidationErrorDirective, ImageFormControlComponent],
   templateUrl: './user-profile.component.html',
-  styleUrl: './user-profile.component.css'
+  styleUrl: './user-profile.component.css',
+  providers: [
+    // Provide the FormHandlerService at the component level
+    { provide: FormHandlerService }
+  ]
 })
 export class UserProfileComponent implements OnInit {
   private notification = inject(NotificationService);
@@ -58,14 +62,18 @@ export class UserProfileComponent implements OnInit {
   protected uploadProgress: number = 0;
 
   protected get isSaveButtonDisabled() {
-    return this.formHandlerService.isSaveDisabled(this.form, this.userData, this.isSaveRequestInProgress);
+    return this.formHandlerService.isSaveDisabled(this.userData, this.isSaveRequestInProgress);
   }
 
   protected get isResetButtonDisabled() {
-    return this.formHandlerService.isResetDisabled(this.form, this.userData, this.isSaveRequestInProgress);
+    return this.formHandlerService.isResetDisabled(this.userData, this.isSaveRequestInProgress);
   }
 
   ngOnInit() {
+    // Initialize the FormHandlerService with the component's form instance.
+    this.formHandlerService.initForm(this.form);
+
+    // Fetch and load the user's profile data into the form.
     this.loadUserData();
   }
 
@@ -87,7 +95,7 @@ export class UserProfileComponent implements OnInit {
             this.userData = data
 
             // display the user data in the form
-            this.formHandlerService.updateForm(this.form, this.userData);
+            this.formHandlerService.updateForm(this.userData);
         }),
         tapError(() => {
           // set the loading error flag
@@ -128,7 +136,7 @@ export class UserProfileComponent implements OnInit {
         // Handle validation errors (HTTP 400 Bad Request) from the server
         tapValidationErrors(errors => {
           // Set the validation errors on the form
-          this.formHandlerService.setFormErrors(this.form, errors.error);
+          this.formHandlerService.setFormErrors(errors.error);
         }),
         tapUploadProgress(progress => {
           // Update the upload progress bar based on the progress received from the server
@@ -140,7 +148,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   protected restoreForm() {
-    this.formHandlerService.restoreForm(this.form, this.userData);
+    this.formHandlerService.restoreForm(this.userData);
   }
 
 }
